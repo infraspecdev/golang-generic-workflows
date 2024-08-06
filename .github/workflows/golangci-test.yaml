@@ -1,0 +1,33 @@
+name: Go - Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  golangci:
+    name: GolangCI Test
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+      statuses: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set Up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          
+      - name: Test with Go
+        run: go test 
