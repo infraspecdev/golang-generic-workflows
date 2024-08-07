@@ -18,7 +18,7 @@ on:
     secrets:
       GH_TOKEN:
         description: 'The GitHub token to use'
-        required: true
+        required: false
 
 jobs:
   lint:

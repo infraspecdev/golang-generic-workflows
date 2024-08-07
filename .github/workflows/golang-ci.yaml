@@ -15,6 +15,10 @@ on:
         description: 'The GitHub owner of the private module'
         required: false
         type: string
+    secrets:
+      GH_TOKEN:
+        description: 'The GitHub token to use for importing private module'
+        required: false
 
 permissions:
   contents: read
@@ -27,6 +31,7 @@ jobs:
     with:
       go-version: 'stable'
     secrets:
+      if: inputs.use-private-module == true
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   test:
@@ -34,4 +39,5 @@ jobs:
     with:
       go-version: 'stable'
     secrets:
+      if: inputs.use-private-module == true
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
