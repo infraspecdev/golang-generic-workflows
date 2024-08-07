@@ -29,13 +29,17 @@ jobs:
   lint:
     uses: ./.github/workflows/golangci-lint.yaml
     with:
-      go-version: 'stable'
+      go-version: ${{ inputs.go-version }}
+      use-private-module: ${{ inputs.use-private-module }}
+      github-owner: ${{ inputs.github-owner }}
     secrets:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   test:
     uses: ./.github/workflows/golangci-test.yaml
     with:
-      go-version: 'stable'
+      go-version: ${{ inputs.go-version }}
+      use-private-module: ${{ inputs.use-private-module }}
+      github-owner: ${{ inputs.github-owner }}
     secrets:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
