@@ -1,12 +1,12 @@
 name: Golang CI
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_call:
+    inputs:
+      go-version:
+        description: 'The Go version to use'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -17,8 +17,8 @@ jobs:
   lint:
     uses: ./.github/workflows/golangci-lint.yaml
     with:
-      go-version: 'stable'
+      go-version: ${{ inputs.go-version }}
   test:
     uses: ./.github/workflows/golangci-test.yaml
     with:
-      go-version: 'stable'
+      go-version: ${{ inputs.go-version }}
