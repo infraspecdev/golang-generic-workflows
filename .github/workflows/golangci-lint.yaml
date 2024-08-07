@@ -1,4 +1,4 @@
-name: Golang Lint Check
+name: GolangCI Lint
 
 on:
   workflow_call:
@@ -7,10 +7,21 @@ on:
         description: 'The version of Go to use'
         required: true
         type: string
+      use-private-module:
+        description: 'Flag to use private module'
+        default: false
+        type: boolean
+      github-owner:
+        description: 'The GitHub owner of the private module'
+        required: false
+        type: string
+    secrets:
+      GH_TOKEN:
+        description: 'The GitHub token to use'
+        required: true
 
 jobs:
-  golangci:
-    name: GolangCI Lint
+  lint:
     runs-on: ubuntu-latest
 
     permissions:
@@ -28,6 +39,15 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ inputs.go-version }}
+
+      - name: Configure Git for Private Modules
+        if: inputs.use-private-module == true
+        run: |
+          git config --global url."https://${{ secrets.GH_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+          echo "GOPRIVATE=github.com/${{ inputs.github-owner }}/*" >> $GITHUB_ENV
+
+      - name: Fetch Dependencies
+        run: go mod tidy
 
       - name: Run GolangCI Lint
         uses: golangci/golangci-lint-action@v6
