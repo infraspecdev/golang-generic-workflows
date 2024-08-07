@@ -31,7 +31,6 @@ jobs:
     with:
       go-version: 'stable'
     secrets:
-      if: inputs.use-private-module == true
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   test:
@@ -39,5 +38,4 @@ jobs:
     with:
       go-version: 'stable'
     secrets:
-      if: inputs.use-private-module == true
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
