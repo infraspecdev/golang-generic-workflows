@@ -9,7 +9,6 @@ on:
         type: string
       use-private-module:
         description: 'Flag to use private module'
-        default: false
         type: boolean
       github-owner:
         description: 'The GitHub owner of the private module'
