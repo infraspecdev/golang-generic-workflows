@@ -8,23 +8,51 @@ on:
         required: true
         type: string
       use-private-module:
-        description: 'Flag to use private module'
+        description: 'Flag to indicate if a private module should be used in the build'
         default: false
         type: boolean
       github-owner:
-        description: 'The GitHub owner of the private module'
+        description: 'The GitHub owner of the private module repository'
         required: false
+        type: string
+      ecr-repository:
+        description: 'The name of the ECR repository to push the Docker image to'
+        required: true
+        type: string
+      aws-region:
+        description: 'The AWS region where the ECR repository is located'
+        default: ap-south-1
+        type: string
+      dockerfile:
+        description: 'The path to the Dockerfile to use for building the Docker image'
+        default: Dockerfile
+        type: string
+      platforms:
+        description: 'The target platforms for the Docker image build (e.g., linux/amd64, linux/arm64)'
+        default: linux/amd64
+        type: string
+      prefix:
+        description: 'A prefix to use for the Docker image tags'
+        default: sha
+        type: string
+      type:
+        description: 'The type of build (e.g., release, snapshot)'
+        default: sha
         type: string
     secrets:
       GH_TOKEN:
         description: 'The GitHub token to use for importing private module'
         required: false
+      assume-role:
+        description: 'The role to assume for AWS operations'
+        required: true
 
 permissions:
   contents: read
   packages: read
   statuses: write
-
+  id-token: write
+  
 jobs:
   lint:
     uses: ./.github/workflows/golangci-lint.yaml
@@ -42,4 +70,19 @@ jobs:
       use-private-module: ${{ inputs.use-private-module }}
       github-owner: ${{ inputs.github-owner }}
     secrets:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  build:
+    uses: ./.github/workflows/golangci-build.yaml
+    with:
+      ecr-repository: ${{ inputs.ecr-repository }}
+      aws-region: ${{ inputs.aws-region }}
+      dockerfile: ${{ inputs.dockerfile }}
+      platforms: ${{ inputs.platforms }}
+      prefix: ${{ inputs.prefix }}
+      type: ${{ inputs.type }}
+      use-private-module: ${{ inputs.use-private-module }}
+      github-owner: ${{ inputs.github-owner }}
+    secrets:
+      assume-role: ${{ secrets.assume-role }}
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
