@@ -6,32 +6,30 @@ on:
       ecr-repository:
         required: true
         type: string
-        description: 'The name of the ECR repository to push the Docker image to'
       aws-region:
+        default: ap-south-1
         type: string
-        description: 'The AWS region where the ECR repository is located'
       dockerfile:
+        default: Dockerfile
         type: string
-        description: 'The path to the Dockerfile to use for building the Docker image'
       platforms:
+        default: linux/amd64
         type: string
-        description: 'The target platforms for the Docker image build (e.g., linux/amd64, linux/arm64)'
       prefix:
+        default: sha
         type: string
-        description: 'A prefix to use for the Docker image tags'
       type:
+        default: sha
         type: string
-        description: 'The type of build (e.g., release, snapshot)'
       use-private-module:
+        default: false
         type: boolean
-        description: 'Flag to indicate if a private module should be used in the build'
-      github-owner:
+      github-username:
+        required: false
         type: string
-        description: 'The GitHub owner of the private module repository'
 
     secrets:
       ASSUME_ROLE:
-        description: 'The role to assume for AWS operations'
         required: true
       GH_TOKEN:
         description: 'The GitHub token to use'
@@ -96,8 +94,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:buildcache
           cache-to: type=registry,ref=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:buildcache,mode=max,image-manifest=true,oci-mediatypes=true
-          secrets:  ${{ secrets.GH_TOKEN }}
-          build-args: GH_OWNER=${{ inputs.github-owner }}
+          secrets: |
+              GH_TOKEN=${{ secrets.GH_TOKEN }}
+          build-args: |
+              GITHUB_USERNAME=${{ inputs.github-username }}
    
       - name: Image Tag output
         id: image-tag
