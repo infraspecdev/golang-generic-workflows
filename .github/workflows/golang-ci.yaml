@@ -64,7 +64,6 @@ jobs:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   test:
-    needs: lint
     uses: ./.github/workflows/golangci-test.yaml
     with:
       go-version: ${{ inputs.go-version }}
@@ -74,8 +73,8 @@ jobs:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   build:
-    needs: test
     uses: ./.github/workflows/golangci-build.yaml
+    needs: test
     with:
       ecr-repository: ${{ inputs.ecr-repository }}
       aws-region: ${{ inputs.aws-region }}
