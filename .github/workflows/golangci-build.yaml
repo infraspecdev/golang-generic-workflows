@@ -24,7 +24,7 @@ on:
       use-private-module:
         default: false
         type: boolean
-      github-username:
+      github-owner:
         required: false
         type: string
 
@@ -97,7 +97,7 @@ jobs:
           secrets: |
               GH_TOKEN=${{ secrets.GH_TOKEN }}
           build-args: |
-              GITHUB_USERNAME=${{ inputs.github-username }}
+              GITHUB_USERNAME=${{ inputs.github-owner }}
    
       - name: Image Tag output
         id: image-tag
