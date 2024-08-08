@@ -43,7 +43,7 @@ on:
       GH_TOKEN:
         description: 'The GitHub token to use for importing private module'
         required: false
-      assume-role:
+      ASSUME_ROLE:
         description: 'The role to assume for AWS operations'
         required: true
 
