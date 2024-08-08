@@ -84,5 +84,5 @@ jobs:
       use-private-module: ${{ inputs.use-private-module }}
       github-owner: ${{ inputs.github-owner }}
     secrets:
-      assume-role: ${{ secrets.assume-role }}
+      assume-role: ${{ secrets.ASSUME_ROLE }}
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
