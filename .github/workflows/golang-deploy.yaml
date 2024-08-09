@@ -1,0 +1,106 @@
+name: ECS - Deployment
+
+on:
+  workflow_call:
+    inputs:
+      ecs-cluster:
+        required: true
+        type: string
+      ecs-service:
+        required: true
+        type: string
+      task-definition-family:
+        required: true
+        type: string
+      aws-region:
+        default: ap-south-1
+        type: string
+      image:
+        required: true
+        type: string
+    secrets:
+      assume-role:
+        required: true
+
+jobs:
+  deploy:
+    name: ECS Deployment
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.assume-role }}
+          aws-region: ${{ inputs.aws-region }}
+
+      - name: Download task definition
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ inputs.task-definition-family }} --query taskDefinition > task-definition.json
+
+      - name: Get old task definition revision
+        id: old-task-revision
+        run: |
+          revision=$(aws ecs describe-services \
+          --cluster ${{ inputs.ecs-cluster }} \
+          --services ${{ inputs.ecs-service }} \
+          --output json | jq -r '.services[] | select(.serviceName == "${{ inputs.ecs-service }}") | .taskDefinition | split(":")[-1]')
+          echo "::notice title=Current Revision::${revision}"
+          
+          task_definition=$(aws ecs describe-task-definition --task-definition ${{ inputs.task-definition-family }} --output json)
+          container_name=$(echo $task_definition | jq -r '.taskDefinition.containerDefinitions[0].name')
+          
+          echo "::notice title=First Container Name::${container_name}"
+          echo "revision=$revision" >> $GITHUB_OUTPUT
+          echo "container_name=$container_name" >> $GITHUB_OUTPUT
+
+      - name: Update image in task definition
+        id: updated-task-definition
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ steps.old-task-revision.outputs.container_name }}
+          image: ${{ inputs.image }}
+
+      - name: Deploy ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.updated-task-definition.outputs.task-definition }}
+          service: ${{ inputs.ecs-service }}
+          cluster: ${{ inputs.ecs-cluster }}
+          wait-for-service-stability: true
+
+      - name: Download newly deployed task definition
+        id: download-new-task-definition
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ inputs.task-definition-family }} --query taskDefinition > new-task-definition.json
+          echo "revision=$(cat new-task-definition.json | jq .revision)" >> $GITHUB_OUTPUT
+
+      - name: Get new task definition revision
+        id: new-task-revision
+        run: |
+          revision=$(aws ecs describe-services \
+            --cluster ${{ inputs.ecs-cluster }} \
+            --services ${{ inputs.ecs-service }} \
+            --output json | jq -r '.services[] | select(.serviceName == "${{ inputs.ecs-service }}") | .taskDefinition | split(":")[-1]')
+          echo "::notice title=New Revision::${revision}"
+          echo "revision=$revision" >> $GITHUB_OUTPUT
+
+      - name: Check Deployment
+        run: |
+          if [[ ${{ steps.download-new-task-definition.outputs.revision }} != ${{ steps.new-task-revision.outputs.revision }} ]]; then
+            echo "Error deploying the current build. Rolling back to previous. Reach out to Devops Team for support."
+            aws ecs deregister-task-definition --task-definition ${{ inputs.ecs-service }}:${{ steps.download-new-task-definition.outputs.revision }}
+            exit 1
+          fi
+
+      - name: De-register previous revision
+        run: aws ecs deregister-task-definition --task-definition ${{ inputs.task-definition-family }}:${{ steps.old-task-revision.outputs.revision }}
