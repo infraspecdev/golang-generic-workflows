@@ -65,6 +65,7 @@ jobs:
 
   test:
     uses: ./.github/workflows/golangci-test.yaml
+    needs: lint
     with:
       go-version: ${{ inputs.go-version }}
       use-private-module: ${{ inputs.use-private-module }}

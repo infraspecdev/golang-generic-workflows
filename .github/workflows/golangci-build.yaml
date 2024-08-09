@@ -3,29 +3,29 @@ name: Go - Build and Push
 on:
   workflow_call:
     inputs:
-      ecr-repository:
-        required: true
-        type: string
-      aws-region:
-        default: ap-south-1
-        type: string
-      dockerfile:
-        default: Dockerfile
-        type: string
-      platforms:
-        default: linux/amd64
-        type: string
-      prefix:
-        default: sha
-        type: string
-      type:
-        default: sha
-        type: string
       use-private-module:
-        default: false
+        description: 'Flag to indicate if a private module should be used in the build'
         type: boolean
       github-owner:
-        required: false
+        description: 'The GitHub owner of the private module repository'
+        type: string
+      ecr-repository:
+        description: 'The name of the ECR repository to push the Docker image to'
+        type: string
+      aws-region:
+        description: 'The AWS region where the ECR repository is located'
+        type: string
+      dockerfile:
+        description: 'The path to the Dockerfile to use for building the Docker image'
+        type: string
+      platforms:
+        description: 'The target platforms for the Docker image build (e.g., linux/amd64, linux/arm64)'
+        type: string
+      prefix:
+        description: 'A prefix to use for the Docker image tags'
+        type: string
+      type:
+        description: 'The type of build (e.g., release, snapshot)'
         type: string
 
     secrets:
@@ -97,7 +97,7 @@ jobs:
           secrets: |
               GH_TOKEN=${{ secrets.GH_TOKEN }}
           build-args: |
-              GITHUB_USERNAME=${{ inputs.github-owner }}
+              GH_OWNER=${{ inputs.github-owner }}
    
       - name: Image Tag output
         id: image-tag
